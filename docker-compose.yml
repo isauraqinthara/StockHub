@@ -44,7 +44,6 @@ services:
       - stockhub-network
 
 volumes:
-- .:/var/www
   db_data:
 
 networks:

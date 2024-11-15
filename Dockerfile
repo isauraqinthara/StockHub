@@ -23,20 +23,19 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . .
 
+RUN composer install --no-scripts --no-autoloader
+
+RUN php artisan config:cache
+
 # Menyalin izin untuk direktori Laravel agar storage dan cache dapat ditulis
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Menyimpan environment file (.env)
 COPY .env.example .env
 
-RUN composer install --no-scripts --no-autoloader
-
-RUN php artisan config:cache
-
 # Expose port 80 untuk mengakses aplikasi melalui Nginx
 EXPOSE 80
 
 # Perintah akhir: jalankan composer install setelah container aktif dan generate APP_KEY
-CMD composer install --no-interaction --prefer-dist --optimize-autoloader && \
-    php artisan key:generate && \
+CMD php artisan key:generate && \
     php-fpm
