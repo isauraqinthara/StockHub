@@ -29,6 +29,10 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Menyimpan environment file (.env)
 COPY .env.example .env
 
+RUN composer install --no-scripts --no-autoloader
+
+RUN php artisan config:cache
+
 # Expose port 80 untuk mengakses aplikasi melalui Nginx
 EXPOSE 80
 
