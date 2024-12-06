@@ -1,0 +1,82 @@
+name: CI/CD Pipeline with Security Testing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-testing:
+    name: Security Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Node.js environment (if applicable)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: |
+          npm install # Adjust this based on your project dependencies
+
+      # Run OWASP ZAP Docker Container for Security Scanning
+      - name: Run OWASP ZAP Security Scan
+        uses: zaproxy/action-full-scan@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8000' # Update with your app's URL
+        env:
+          JAVA_OPTS: '-Xmx512m'
+
+      # Run Static Application Security Testing (SAST)
+      - name: Run SAST with CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'javascript, python' # Adjust based on your project
+          queries: './custom-queries' # Optional custom queries
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  build-and-test:
+    name: Build and Run Tests
+    needs: security-testing
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup dependencies
+      - name: Install Dependencies
+        run: |
+          npm install
+
+      # Run unit tests
+      - name: Run Unit Tests
+        run: npm test
+
+  deployment:
+    name: Deploy to Production
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Production
+        run: |
+          echo "Deploying to production..."
+          # Add deployment steps here
