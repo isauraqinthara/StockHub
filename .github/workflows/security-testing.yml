@@ -3,10 +3,10 @@ name: Security Testing
 on:
   push:
     branches:
-      - security-testing  
+      - security-testing
   pull_request:
     branches:
-      - security-testing  
+      - security-testing
 
 jobs:
   security-testing:
@@ -22,7 +22,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.1'  # Gunakan PHP yang sesuai
           extensions: mbstring, bcmath, pdo_mysql, zip
           ini-values: post_max_size=256M, upload_max_filesize=256M
 
@@ -31,28 +31,30 @@ jobs:
         run: |
           composer install --prefer-dist --no-progress --no-suggest
 
-      # 4. Debugging PHP and Composer versions
-      - name: Verify PHP Version
+      # 4. Debugging PHP version and installed extensions
+      - name: Check PHP Version
         run: php -v
 
-      - name: Verify Composer Version
+      - name: Check Composer Version
         run: composer --version
+
+      - name: Verify Installed PHP Extensions
+        run: php -m
 
       # 5. Jalankan OWASP ZAP untuk security scanning aplikasi
       - name: Run OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.6.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  
-          target: 'http://localhost:8000'  
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'https://217.15.160.69' 
         env:
-          JAVA_OPTS: '-Xmx512m'  
+          JAVA_OPTS: '-Xmx512m'
 
-      # 6. Jalankan Static Application Security Testing (SAST) dengan CodeQL
+      # 6. Jalankan Static Analysis dengan CodeQL
       - name: Run Static Analysis with CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: 'php' 
-          queries: './custom-queries'  
+          languages: 'php'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
