@@ -1,0 +1,49 @@
+name: Security Testing
+
+on:
+  push:
+    branches:
+      - security-testing 
+  pull_request:
+    branches:
+      - security-testing 
+
+jobs:
+  security-testing:
+    name: Run Security Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Setup PHP environment
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, pdo_mysql, zip
+          ini-values: post_max_size=256M, upload_max_filesize=256M
+
+      # 3. Install Composer dependencies
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      # 4. Jalankan OWASP ZAP untuk security scanning aplikasi
+      - name: Run OWASP ZAP Security Scan
+        uses: zaproxy/action-full-scan@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'http://localhost:8000'
+        env:
+          JAVA_OPTS: '-Xmx512m'
+
+      # 5. Jalankan Static Application Security Testing (SAST) dengan CodeQL
+      - name: Run Static Analysis with CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'php'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
