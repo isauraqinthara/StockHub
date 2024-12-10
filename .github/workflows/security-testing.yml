@@ -3,10 +3,10 @@ name: Security Testing
 on:
   push:
     branches:
-      - security-testing 
+      - security-testing  
   pull_request:
     branches:
-      - security-testing 
+      - security-testing  
 
 jobs:
   security-testing:
@@ -28,22 +28,31 @@ jobs:
 
       # 3. Install Composer dependencies
       - name: Install Composer Dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: |
+          composer install --prefer-dist --no-progress --no-suggest
 
-      # 4. Jalankan OWASP ZAP untuk security scanning aplikasi
+      # 4. Debugging PHP and Composer versions
+      - name: Verify PHP Version
+        run: php -v
+
+      - name: Verify Composer Version
+        run: composer --version
+
+      # 5. Jalankan OWASP ZAP untuk security scanning aplikasi
       - name: Run OWASP ZAP Security Scan
         uses: zaproxy/action-full-scan@v0.6.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8000'
+          token: ${{ secrets.GITHUB_TOKEN }}  
+          target: 'http://localhost:8000'  
         env:
-          JAVA_OPTS: '-Xmx512m'
+          JAVA_OPTS: '-Xmx512m'  
 
-      # 5. Jalankan Static Application Security Testing (SAST) dengan CodeQL
+      # 6. Jalankan Static Application Security Testing (SAST) dengan CodeQL
       - name: Run Static Analysis with CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: 'php'
+          languages: 'php' 
+          queries: './custom-queries'  
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
